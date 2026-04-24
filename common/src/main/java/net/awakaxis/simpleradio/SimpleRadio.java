@@ -9,7 +9,8 @@ import java.util.EnumSet;
 
 public class SimpleRadio {
 
-    public static final JDA BOT = JDABuilder.createLight("TOKEN", EnumSet.allOf(GatewayIntent.class))
+    // todo: move
+    public static final JDA BOT = JDABuilder.create("TOKEN", EnumSet.allOf(GatewayIntent.class))
             .addEventListeners(new MessageForwarderListener()).build();
 
     public static void init() {
