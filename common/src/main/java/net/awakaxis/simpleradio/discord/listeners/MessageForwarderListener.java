@@ -1,18 +1,24 @@
 package net.awakaxis.simpleradio.discord.listeners;
 
 import net.awakaxis.simpleradio.Constants;
-import net.awakaxis.simpleradio.SimpleRadio;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Webhook;
+import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
+import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateBoostTimeEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.server.MinecraftServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class MessageForwarderListener extends ListenerAdapter {
+
+    private static final int MAX_REPLY_LENGTH = 25;
 
     @Nullable
     private static MinecraftServer server;
@@ -29,14 +35,25 @@ public class MessageForwarderListener extends ListenerAdapter {
         Constants.LOGGER.info("!{}! [{}] {}: {}\n", server == null ? "NO SERVER" : "SERVER", event.getChannel(), event.getAuthor(), event.getMessage().getContentDisplay());
         if (server != null) {
             if (event.getChannel() instanceof GuildChannel guildChannel) {
-                Member member = (Member) event.getAuthor();
+                Member member = guildChannel.getGuild().getMember(event.getAuthor());
+                assert member != null;
                 int color = member.getColors().getPrimaryRaw();
-                server.getPlayerList().broadcastSystemMessage(
-                        Component.empty()
-                                .append(Component.literal("[DC] ").withColor(0x5865F2).withStyle(ChatFormatting.BOLD))
-                                .append(Component.literal(String.format("%s", event.getAuthor().getName())).withColor(color))
-                                .append(Component.nullToEmpty(String.format(": %s", event.getMessage().getContentDisplay())))
-                        , false);
+
+                MutableComponent component = Component.empty()
+                        .append(Component.literal("[DC] ").withColor(0x5865F2).withStyle(ChatFormatting.BOLD))
+                        .append(Component.literal(String.format("%s", event.getAuthor().getName())).withColor(color));
+
+                if (event.getMessage().getReferencedMessage() != null) {
+                    String referenceContent = event.getMessage().getReferencedMessage().getContentDisplay();
+                    if (referenceContent.length() > MAX_REPLY_LENGTH - 3) {
+                        referenceContent = referenceContent.substring(0, MAX_REPLY_LENGTH - 3).trim().concat("...");
+                    }
+                    component.append(Component.literal(String.format(" ⤷「%s」", referenceContent)).withStyle(ChatFormatting.GRAY));
+                }
+
+                component.append(Component.nullToEmpty(String.format(": %s", event.getMessage().getContentDisplay())));
+
+                server.getPlayerList().broadcastSystemMessage(component, false);
             }
         }
     }
