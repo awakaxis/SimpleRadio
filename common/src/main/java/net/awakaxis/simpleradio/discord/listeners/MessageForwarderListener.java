@@ -28,12 +28,16 @@ public class MessageForwarderListener extends ListenerAdapter {
         }
         Constants.LOGGER.info("!{}! [{}] {}: {}\n", server == null ? "NO SERVER" : "SERVER", event.getChannel(), event.getAuthor(), event.getMessage().getContentDisplay());
         if (server != null) {
-            server.getPlayerList().broadcastSystemMessage(
-                    Component.empty()
-                            .append(Component.literal("[DC] ").withColor(0x5865F2).withStyle(ChatFormatting.BOLD))
-                            .append(Component.nullToEmpty(String.format("%s", event.getAuthor().getName())))
-                            .append(Component.nullToEmpty(String.format(": %s", event.getMessage().getContentDisplay())))
-                    , false);
+            if (event.getChannel() instanceof GuildChannel guildChannel) {
+                Member member = (Member) event.getAuthor();
+                int color = member.getColors().getPrimaryRaw();
+                server.getPlayerList().broadcastSystemMessage(
+                        Component.empty()
+                                .append(Component.literal("[DC] ").withColor(0x5865F2).withStyle(ChatFormatting.BOLD))
+                                .append(Component.literal(String.format("%s", event.getAuthor().getName())).withColor(color))
+                                .append(Component.nullToEmpty(String.format(": %s", event.getMessage().getContentDisplay())))
+                        , false);
+            }
         }
     }
 }
