@@ -23,7 +23,7 @@ public class MessageForwarderListener extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-        if (event.getAuthor().equals(SimpleRadio.BOT.getSelfUser())) {
+        if (event.getAuthor().isBot() || event.getAuthor().isSystem()) {
             return;
         }
         Constants.LOGGER.info("!{}! [{}] {}: {}\n", server == null ? "NO SERVER" : "SERVER", event.getChannel(), event.getAuthor(), event.getMessage().getContentDisplay());
